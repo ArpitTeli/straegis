@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>STRAEGIS Debug</title>
+<style>
+body { background: #0a0c0e; color: #ccd6e0; font-family: monospace; padding: 20px; }
+.ok   { color: #3daa6b; }
+.fail { color: #d94f3d; }
+.warn { color: #c8a84b; }
+pre   { background: #111; padding: 10px; margin: 4px 0; font-size: 12px; overflow-x: auto; }
+</style>
+</head>
+<body>
+<h2>STRAEGIS — Debug Checker</h2>
+<div id="log"></div>
+
+<script>
+const log = document.getElementById('log');
+function ok(msg)   { log.innerHTML += `<pre class="ok">✓ ${msg}</pre>`; }
+function fail(msg) { log.innerHTML += `<pre class="fail">✗ ${msg}</pre>`; }
+function warn(msg) { log.innerHTML += `<pre class="warn">⚠ ${msg}</pre>`; }
+function info(msg) { log.innerHTML += `<pre>${msg}</pre>`; }
+
+// Catch all errors
+window.onerror = (msg, src, line, col, err) => {
+  fail(`JS ERROR: ${msg}\n  at ${src}:${line}:${col}\n  ${err?.stack || ''}`);
+};
+
+window.addEventListener('unhandledrejection', e => {
+  fail(`PROMISE REJECTION: ${e.reason}`);
+});
+</script>
+
+<!-- Load Three.js first -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"
+  onload="checkThree()" onerror="fail('THREE.JS FAILED TO LOAD FROM CDN')">
+</script>
+
+<script>
+function checkThree() {
+  if (typeof THREE !== 'undefined') {
+    ok(`THREE.js loaded — r${THREE.REVISION}`);
+    testWebGL();
+  } else {
+    fail('THREE is undefined after load');
+  }
+}
+
+function testWebGL() {
+  try {
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    if (gl) {
+      ok('WebGL supported: ' + gl.getParameter(gl.RENDERER));
+    } else {
+      fail('WebGL NOT supported — this browser/GPU cannot run Three.js');
+    }
+  } catch(e) {
+    fail('WebGL test threw: ' + e.message);
+  }
+}
+</script>
+
+<!-- Load game scripts one by one -->
+<script src="js/data.js"    onload="ok('data.js loaded')"    onerror="fail('FAILED: data.js')"></script>
+<script src="js/save.js"    onload="ok('save.js loaded')"    onerror="fail('FAILED: save.js')"></script>
+<script src="js/economy.js" onload="ok('economy.js loaded')" onerror="fail('FAILED: economy.js')"></script>
+<script src="js/habits.js"  onload="ok('habits.js loaded')"  onerror="fail('FAILED: habits.js')"></script>
+<script src="js/audio.js"   onload="ok('audio.js loaded')"   onerror="fail('FAILED: audio.js')"></script>
+<script src="js/effects.js" onload="ok('effects.js loaded')" onerror="fail('FAILED: effects.js')"></script>
+<script src="js/village.js" onload="ok('village.js loaded')" onerror="fail('FAILED: village.js')"></script>
+<script src="js/battle.js"  onload="ok('battle.js loaded')"  onerror="fail('FAILED: battle.js')"></script>
+<script src="js/ui.js"      onload="ok('ui.js loaded')"      onerror="fail('FAILED: ui.js')"></script>
+<script src="js/main.js"    onload="ok('main.js loaded')"    onerror="fail('FAILED: main.js')"></script>
+
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    info('--- Module checks ---');
+
+    ['THREE','DATA','Save','Economy','Habits','Audio','Effects','Village','Battle','UI'].forEach(name => {
+      if (typeof window[name] !== 'undefined') ok(name + ' defined');
+      else fail(name + ' is UNDEFINED');
+    });
+
+    info('--- Canvas ID check ---');
+    const gc = document.getElementById('game-canvas');
+    if (gc) ok('game-canvas element found in DOM');
+    else    fail('game-canvas NOT FOUND — index.html is stale/cached. Hard refresh with Ctrl+Shift+R');
+
+    info('--- Canvas test ---');
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = 400; canvas.height = 300;
+      document.body.appendChild(canvas);
+
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+      renderer.setSize(400, 300);
+      ok('WebGLRenderer created successfully');
+
+      const scene  = new THREE.Scene();
+      scene.background = new THREE.Color(0x223344);
+      const camera = new THREE.PerspectiveCamera(45, 400/300, 0.1, 100);
+      camera.position.set(0, 5, 10);
+      camera.lookAt(0, 0, 0);
+
+      scene.add(new THREE.AmbientLight(0xffffff, 1));
+      const geo  = new THREE.BoxGeometry(2, 2, 2);
+      const mat  = new THREE.MeshLambertMaterial({ color: 0xc8a84b });
+      const cube = new THREE.Mesh(geo, mat);
+      scene.add(cube);
+
+      renderer.render(scene, camera);
+      ok('Test scene rendered — if you see a blue box above, WebGL is working');
+
+    } catch(e) {
+      fail('Canvas render test threw: ' + e.message + '\n' + e.stack);
+    }
+
+    info('--- localStorage ---');
+    try {
+      localStorage.setItem('test', '1');
+      localStorage.removeItem('test');
+      ok('localStorage works');
+    } catch(e) {
+      warn('localStorage blocked: ' + e.message);
+    }
+
+    info('--- Done. Share a screenshot of this page. ---');
+  }, 1000);
+});
+</script>
+</body>
+</html>

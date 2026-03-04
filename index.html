@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>STRAEGIS — Tactical Habit Warfare</title>
+  <link rel="stylesheet" href="css/ui.css?v=5" />
+</head>
+<body>
+  <div id="game-container">
+    <canvas id="game-canvas"></canvas>
+
+    <div id="hud">
+
+      <!-- TOP BAR -->
+      <div id="hud-top">
+        <div class="logo-mark">STRAEGIS</div>
+        <div id="resources">
+          <div class="res-pill">
+            <span class="res-icon">🪵</span>
+            <span class="res-val" id="wood-val">0</span>
+          </div>
+          <div class="res-pill">
+            <span class="res-icon">⚙️</span>
+            <span class="res-val" id="iron-val">0</span>
+          </div>
+          <div class="res-pill">
+            <span class="res-icon">🏅</span>
+            <span class="res-val" id="medals-val">0</span>
+          </div>
+        </div>
+        <div id="wave-info">
+          <span class="wave-label">WAVE</span>
+          <span class="wave-num" id="wave-num">1</span>
+          <span class="wave-label" style="margin-left:14px;font-size:9px;">BEST</span>
+          <span class="wave-num" id="best-wave-num" style="color:var(--text2);font-size:16px;">0</span>
+        </div>
+      </div>
+
+      <!-- BOTTOM PANEL -->
+      <div id="bottom-panel">
+        <div id="tab-bar">
+          <button class="tab-btn active" data-tab="habits">OBJECTIVES</button>
+          <button class="tab-btn" data-tab="build">BUILD</button>
+          <button class="tab-btn" data-tab="research">RESEARCH</button>
+          <button class="tab-btn" data-tab="army">ARMY</button>
+        </div>
+
+        <div id="tab-content">
+
+          <!-- HABITS TAB -->
+          <div class="tab-pane active" id="tab-habits">
+            <div id="habits-toolbar">
+              <button id="add-item-btn">+ ADD</button>
+              <div class="resource-hint">
+                <span style="color:#d94f3d">🏃 Health → ⚙️ Iron</span>
+                &nbsp;|&nbsp;
+                <span style="color:#3d7fd9">📚 Study → 🪵 Wood</span>
+              </div>
+            </div>
+            <div id="habits-container"></div>
+          </div>
+
+          <!-- BUILD TAB -->
+          <div class="tab-pane" id="tab-build">
+            <div id="build-grid"></div>
+          </div>
+
+          <!-- RESEARCH TAB -->
+          <div class="tab-pane" id="tab-research">
+            <div id="research-grid"></div>
+          </div>
+
+          <!-- ARMY TAB -->
+          <div class="tab-pane" id="tab-army">
+            <div id="army-grid"></div>
+            <button id="deploy-btn">⚔ DEPLOY FORCES</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- BATTLE LOG -->
+    <div id="battle-log-panel">
+      <div id="battle-log"></div>
+    </div>
+
+    <!-- RESULT OVERLAY -->
+    <div id="result-overlay" class="hidden">
+      <div id="result-box">
+        <div id="result-title"></div>
+        <div id="result-sub"></div>
+        <button id="result-btn"></button>
+      </div>
+    </div>
+
+    <!-- ADD HABIT / TASK MODAL -->
+    <div id="add-modal-backdrop" class="hidden">
+      <div id="add-modal">
+        <div class="modal-header">
+          <span class="modal-title">ADD OBJECTIVE</span>
+          <button class="modal-close-btn" onclick="UI.closeModal ? UI.closeModal() : document.getElementById('add-modal-backdrop').classList.add('hidden')">✕</button>
+        </div>
+
+        <!-- Type toggle -->
+        <div class="modal-type-row">
+          <button class="modal-type-btn active" data-type="habit">🔁 HABIT</button>
+          <button class="modal-type-btn" data-type="task">✓ ONE-TIME TASK</button>
+        </div>
+
+        <!-- Name -->
+        <div class="modal-field">
+          <label class="modal-label">NAME</label>
+          <input id="modal-name" class="modal-input" placeholder="e.g. Morning run, Read 20 pages..." maxlength="50" />
+        </div>
+
+        <!-- Category -->
+        <div class="modal-field">
+          <label class="modal-label">CATEGORY</label>
+          <select id="modal-category" class="modal-select">
+            <option value="health">🏃 Health &amp; Fitness → ⚙️ Iron</option>
+            <option value="study">📚 Learning &amp; Study → 🪵 Wood</option>
+          </select>
+        </div>
+
+        <!-- Schedule (habit only) -->
+        <div id="schedule-section">
+          <div class="modal-field">
+            <label class="modal-label">REPEAT</label>
+            <select id="schedule-type" class="modal-select">
+              <option value="daily">Every day</option>
+              <option value="days_of_week">Specific days of the week</option>
+              <option value="times_per_week">X times per week</option>
+              <option value="every_n_days">Every N days</option>
+            </select>
+          </div>
+          <div id="schedule-options"></div>
+        </div>
+
+        <button id="modal-submit-btn">ADD</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Three.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <!-- Game modules — ORDER MATTERS -->
+  <script src="js/data.js?v=5"></script>
+  <script src="js/save.js?v=5"></script>
+  <script src="js/economy.js?v=5"></script>
+  <script src="js/habits.js?v=5"></script>
+  <script src="js/audio.js?v=5"></script>
+  <script src="js/effects.js?v=5"></script>
+  <script src="js/village.js?v=5"></script>
+  <script src="js/battle.js?v=5"></script>
+  <script src="js/ui.js?v=5"></script>
+  <script src="js/main.js?v=5"></script>
+</body>
+</html>
